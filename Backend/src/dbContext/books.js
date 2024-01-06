@@ -1,8 +1,10 @@
 import mongoClient from "./mongo.js";
 
-export const addBook = (bookData) => mongoClient.insertOne("books", bookData);
+export const addBook = async (bookData) => mongoClient.insertOne("books", bookData);
 
-export const getBooks = (
+export const getBook = async (filters) => mongoClient.findOne("books", filters);
+
+export const getBooks = async(
   filters,
   options = {},
   pagination = { skip: 0, limit: 0 }
@@ -13,7 +15,7 @@ export const getBooks = (
     .limit(pagination.limit)
     .toArray();
 
-export const updateBook = (filters, update) => {
+export const updateBook =async (filters, update) => {
   mongoClient.updateOne("books", filters, update);
 };
 

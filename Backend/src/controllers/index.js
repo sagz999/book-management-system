@@ -7,13 +7,9 @@ const router = Router();
 
 const routes = [
   {
-    path: "/auth",
-    requestHandler: authHandler,
-  },
-  {
     path: "/books",
     requestHandler: booksHandler,
-  },
+  }
 ];
 
 routes.forEach((route) => {
