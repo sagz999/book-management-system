@@ -4,9 +4,7 @@ import bcrypt from 'bcrypt'
 import { addUser, getUser } from "../dbContext/users.js";
 import HttpError from '../utils/HttpError.js'
 
-const jwtSecretKey =  process.env.JWT_SECRET ?? 'fabc4842baa614703de304efff8c9db3c2ba8a97cc8f8f1ae745c25304459178'
-// console.log("jwt",jwtSecretKey);
-
+const jwtSecretKey =  process.env.JWT_SECRET
 
 export const createUser =async(credentials)=>{
 

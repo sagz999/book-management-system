@@ -1,6 +1,6 @@
 {
   "verbose": true,
-  "ignore": ["*.test.js"],
+  "ignore": ["*.test.js", "scripts/*"],
   "watch": "src/**/*",
-  "exec": "node src/server.js"
+  "exec": "node -r dotenv/config src/server.js"
 }

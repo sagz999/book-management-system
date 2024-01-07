@@ -2,7 +2,7 @@
 import { MongoClient, MongoError } from 'mongodb'
 
 const url = process.env.MONGO_CONNECTION_URL ?? 'mongodb://localhost:27017'
-const DATABASE_NAME = process.env.DB_NAME ?? 'Books'
+const DATABASE_NAME = process.env.DB_NAME
 const ARCHIVE_COLLECTION_NAME = process.env.ARCHIVE_COLL_NAME ?? 'archive'
 
 /**
@@ -48,7 +48,7 @@ class DbClient {
         ...update,
         $set: {
           ...update.$set,
-          updatedAt: new Date()
+          updated_at: new Date()
         }
       },
       options
@@ -70,7 +70,7 @@ class DbClient {
         ...update,
         $set: {
           ...update.$set,
-          updatedAt: new Date()
+          updated_at: new Date()
         }
       },
       options
@@ -92,7 +92,7 @@ class DbClient {
         ...update,
         $set: {
           ...update.$set,
-          updatedAt: new Date()
+          updated_at: new Date()
         }
       },
       options
@@ -110,7 +110,7 @@ class DbClient {
     return this.db.collection(coll).insertMany(
       docs.map(doc => ({
         ...doc,
-        createdAt: new Date()
+        created_at: new Date()
       })),
       options
     )
@@ -126,7 +126,7 @@ class DbClient {
     return this.db.collection(coll).insertOne(
       {
         ...doc,
-        createdAt: new Date()
+        created_at: new Date()
       },
       options
     )

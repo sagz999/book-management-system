@@ -1,12 +1,10 @@
 import { ObjectId } from "mongodb";
 
-import { addBook, getBook } from "../dbContext/books.js";
+import { addBook, getBook, getBooks, updateBook } from "../dbContext/books.js";
 import HttpError from "../utils/HttpError.js";
 
 export const publishBook = async (bookData) => {
   const { title, user } = bookData;
-
-  console.log("bookData==>", bookData);
 
   const book = await getBook({ title, published: true });
   if (book)
@@ -16,9 +14,8 @@ export const publishBook = async (bookData) => {
 
   const bookObj = {
     title,
-    user_id: user?.user_id ?? user,
-    published: true,
-    published_on: new Date(),
+    user_id: user?.user_id,
+    published: true
   };
 
   const { insertedId: bookId } = await addBook(bookObj);
@@ -31,19 +28,21 @@ export const searchBooks = async (params) => {
 
   return getBook({
     title: new RegExp(searchKey, "i"),
-    user_id: user?._id?.toString(),
+    user_id: user?.user_id,
   });
 };
 
-export const unpublishBook = async (bookId) => {
+export const unpublishBook = async (params) => {
+  const { bookId, user } = params;
+
   return updateBook(
-    { _id: new ObjectId(bookId) },
+    { _id: new ObjectId(bookId), user_id: user?.user_id },
     { $set: { published: false } }
   );
 };
 
 export const getUserPublishedBooks = async (user) => {
-  return getBook({ user_id: user?._id?.toString(), publiched: true });
+  return getBooks({ user_id: user?.user_id, published: true });
 };
 
 export default {};

@@ -11,7 +11,7 @@ const auth = Router();
 auth.post("/signup", async (req, res, next) => {
   try {
 
-    // if (!authDto(req.body)) throw new HttpError(400, authDto.errors)
+    if (!authDto(req.body)) throw new HttpError(400, authDto.errors)
 
     const credentials = req.body
     const token = await createUser(credentials)
@@ -20,7 +20,6 @@ auth.post("/signup", async (req, res, next) => {
     return res.status(response.status).send(response)
 
   } catch (err) {
-    console.log(err);
     return next(err);
   }
 });
@@ -28,7 +27,7 @@ auth.post("/signup", async (req, res, next) => {
 auth.post("/login", async (req, res, next) => {
   try {
 
-    // if (!authDto(req.body)) throw new HttpError(400, authDto.errors)
+    if (!authDto(req.body)) throw new HttpError(400, authDto.errors)
 
     const credentials = req.body
     const token = await logInUser(credentials)

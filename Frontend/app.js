@@ -1,13 +1,7 @@
 const BASE_URL = "http://localhost:3000"; // Replace with your actual backend URL
 
-
 // Dummy book data (replace with actual fetch from the server)
-let books = [
-  { title: "Book 1", userId: "user" },
-  { title: "Book 2", userId: "user" },
-  { title: "Book 3", userId: "otherUser" },
-  // Add more books as needed
-];
+let books = [];
 
 // Dummy user data (replace with actual user authentication logic)
 let currentUser = null;
@@ -33,11 +27,32 @@ function displayBookList() {
   bookListContainer.innerHTML = "<h2>Book List</h2>";
 
   if (currentUser) {
-    books.forEach((book) => {
-      const bookItem = document.createElement("div");
-      bookItem.textContent = book.title;
-      bookListContainer.appendChild(bookItem);
-    });
+    const token = localStorage.getItem("token");
+
+    fetch(`${BASE_URL}/api/books/published`, {
+      method: "GET",
+      headers: {
+        Authorization: token,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data?.results?.length) {
+          data?.results?.forEach((book) => {
+            const bookItem = document.createElement("div");
+            bookItem.textContent = book.title;
+            bookListContainer.appendChild(bookItem);
+          });
+        } else {
+          bookListContainer.innerHTML = "<p>No books found!</p>";
+        }
+      })
+      .catch((error) => {
+        console.log("error==>", JSON.stringify(error));
+
+        //   console.error('Error during login:', error);
+        //   alert(`${error}`);
+      });
   } else {
     bookListContainer.innerHTML = "<p>Please log in to see the book list.</p>";
   }
@@ -63,13 +78,13 @@ function publishBook() {
   const bookTitle = document.getElementById("bookTitle").value;
   if (bookTitle) {
     // Dummy logic to add a new book to the list
-    const newBook = { title: bookTitle, user: currentUser };
+    const newBook = { title: bookTitle };
 
-    fetch(`${BASE_URL}/private/api/books/publish`, {
+    fetch(`${BASE_URL}/api/books/publish`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        authorization: token,
+        Authorization: token,
       },
       body: JSON.stringify(newBook),
     })
@@ -83,7 +98,7 @@ function publishBook() {
         //   alert(`${error}`);
       });
 
-    books.push(newBook);
+    // books.push(newBook);
     displayBookList();
   } else {
     alert("Please enter a title for the book.");
@@ -96,57 +111,76 @@ function displayMyBooks() {
   bookListContainer.innerHTML = "<h2>My Books</h2>";
 
   if (currentUser) {
-    if (myBooks.length > 0) {
-      myBooks.forEach((book) => {
-        const bookItem = document.createElement("div");
-        bookItem.textContent = book.title;
-        bookListContainer.appendChild(bookItem);
+    const token = localStorage.getItem("token");
+
+    fetch(`${BASE_URL}/api/books/user`, {
+      method: "GET",
+      headers: {
+        Authorization: token,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data?.results?.length) {
+          data?.results?.forEach((book) => {
+            const bookItem = document.createElement("div");
+            bookItem.textContent = book.title;
+            bookListContainer.appendChild(bookItem);
+          });
+        } else {
+          bookListContainer.innerHTML =
+            "<p>You have not published any books yet.</p>";
+        }
+      })
+      .catch((error) => {
+        console.log("error==>", JSON.stringify(error));
+
+        //   console.error('Error during login:', error);
+        //   alert(`${error}`);
       });
-    } else {
-      bookListContainer.innerHTML =
-        "<p>You have not published any books yet.</p>";
-    }
   } else {
     bookListContainer.innerHTML = "<p>Please log in to see your books.</p>";
   }
 }
 
-
 function login() {
   const username = document.getElementById("loginUsername").value;
   const password = document.getElementById("loginPassword").value;
 
-  fetch(`${BASE_URL}/public/api/auth/login`, {
+  fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
-    headers: {"Content-Type": "application/json",},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
   })
     .then((response) => response.json())
     .then((data) => {
       console.log("response", JSON.stringify(data));
-      if (data?.results[0]?.token) {
+
+      if (data?.results?.[0]?.token) {
         localStorage.setItem("token", data.results[0].token);
         currentUser = username;
         showLandingPage();
-      } else {
-        alert("Invalid username or password");
+      } 
+      
+      if (data?.errors?.length) {
+        data?.errors?.forEach((err) => {
+          alert(`${err.instancePath ?? ""}:${err.message}`);
+        });
       }
-      // console.error(data);
-      // alert(`${data}`);
-    })
-    .catch((error) => {
-      console.log("error==>", JSON.stringify(error));
 
-      //   console.error('Error during login:', error);
-      //   alert(`${error}`);
-    });
+     
+    })
+  .catch((error) => {
+    console.error('Error during login:', error);
+    alert("Error during login");
+  });
 }
 
 function signup() {
   const username = document.getElementById("signupUsername").value;
   const password = document.getElementById("signupPassword").value;
 
-  fetch(`${BASE_URL}/public/api/auth/signup`, {
+  fetch(`${BASE_URL}/api/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -184,7 +218,7 @@ function fetchMyBooks() {
     return;
   }
 
-  fetch(`${BASE_URL}/private/api/books/user`, {
+  fetch(`${BASE_URL}/api/books/user`, {
     method: "GET",
     headers: {
       Authorization: token,
