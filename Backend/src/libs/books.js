@@ -24,11 +24,11 @@ export const publishBook = async (bookData) => {
 };
 
 export const searchBooks = async (params) => {
-  const { searchKey, user } = params;
+  const { searchKey } = params;
 
   return getBook({
     title: new RegExp(searchKey, "i"),
-    user_id: user?.user_id,
+    published:true,
   });
 };
 

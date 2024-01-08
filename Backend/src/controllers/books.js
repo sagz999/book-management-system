@@ -9,14 +9,13 @@ import {
   searchBooks,
   unpublishBook,
 } from "../libs/books.js";
-import {  publishBookDto } from "../dto/books.js";
+import { publishBookDto } from "../dto/books.js";
 import { getBooks } from "../dbContext/books.js";
 
 const books = Router();
 
 books.post("/publish", async (req, res, next) => {
   try {
-
     if (!publishBookDto(req.body))
       throw new HttpError(400, publishBookDto.errors);
 
@@ -38,17 +37,14 @@ books.post("/publish", async (req, res, next) => {
 
 books.get("/search", async (req, res, next) => {
   try {
-
     const params = {
       searchKey: req.query.title,
-      user: req.user,
     };
 
     const books = await searchBooks(params);
 
     const response = new HttpRes(201, books);
     return res.status(response.status).send(response);
-
   } catch (err) {
     return next(err);
   }
@@ -56,19 +52,19 @@ books.get("/search", async (req, res, next) => {
 
 books.put("/unpublish/:bookId", async (req, res, next) => {
   try {
-
     const params = {
       bookId: req.params.bookId,
       user: req.user,
     };
+    
+    if (!params.bookId) throw new HttpError(400, { message: "Invalid bookId" });
 
     await unpublishBook(params);
 
     const response = new HttpRes(200, {
-      message: `Unpublished Book:${bookId}`,
+      message: `Unpublished Book:${params.bookId}`,
     });
     return res.status(response.status).send(response);
-
   } catch (err) {
     return next(err);
   }
@@ -87,7 +83,29 @@ books.get("/user", async (req, res, next) => {
 
 books.get("/published", async (req, res, next) => {
   try {
-    const books = await getBooks({ published: true });
+    let perPage = 10;
+    let page = 1;
+
+    if (req.query.page === "all" || !req.query.page  ) {
+      perPage = null;
+      page = "all";
+    } else {
+      perPage = parseInt(req.query.per_page, 10) || 10;
+      page = parseInt(req.query.page, 10) || 1;
+    }
+
+    const offset = page !== "all" ? parseInt(perPage * (page - 1), 10) : 0;
+    const limit = page !== "all" ? parseInt(perPage, 10) : 0;
+
+    const pagination = {
+      skip: offset,
+      limit: limit,
+    };
+    const books = await getBooks(
+      { published: true },
+      { sort: { _id: -1 } },
+      pagination
+    );
     const response = new HttpRes(200, books);
     return res.status(response.status).send(response);
   } catch (err) {

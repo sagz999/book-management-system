@@ -20,11 +20,13 @@ function showLandingPage() {
   document.getElementById("landingPage").style.display = "block";
   document.getElementById("usernameSpan").textContent = currentUser;
   displayBookList();
+  // clearSearchResult()
 }
 
 function displayBookList() {
-  const bookListContainer = document.getElementById("bookList");
-  bookListContainer.innerHTML = "<h2>Book List</h2>";
+  // clearSearchResult()
+  const bookListContainer = document.getElementById("allBook-tab-pane");
+  bookListContainer.innerHTML = "<h4>Book List</h4>";
 
   if (currentUser) {
     const token = localStorage.getItem("token");
@@ -48,10 +50,8 @@ function displayBookList() {
         }
       })
       .catch((error) => {
-        console.log("error==>", JSON.stringify(error));
-
-        //   console.error('Error during login:', error);
-        //   alert(`${error}`);
+        console.error("error", error);
+        alert("Error while fetching all books");
       });
   } else {
     bookListContainer.innerHTML = "<p>Please log in to see the book list.</p>";
@@ -71,7 +71,7 @@ function publishBook() {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    alert("Please log in to see your books.");
+    alert("Please log in to publish your books.");
     return;
   }
 
@@ -105,10 +105,35 @@ function publishBook() {
   }
 }
 
+function unpublishBook(bookId) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Please log in to publish your books.");
+    return;
+  }
+
+  fetch(`${BASE_URL}/api/books/unpublish/${bookId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+      displayMyBooks();
+    })
+    .catch((error) => {
+      console.error("error", error);
+      alert("Error while unpublishing book");
+    });
+}
+
 function displayMyBooks() {
-  const myBooks = books.filter((book) => book.userId === currentUser);
-  const bookListContainer = document.getElementById("bookList");
-  bookListContainer.innerHTML = "<h2>My Books</h2>";
+  // clearSearchResult()
+  const bookListContainer = document.getElementById("userBook-tab-pane");
+  bookListContainer.innerHTML = "<h4>My Books</h4>";
 
   if (currentUser) {
     const token = localStorage.getItem("token");
@@ -124,7 +149,14 @@ function displayMyBooks() {
         if (data?.results?.length) {
           data?.results?.forEach((book) => {
             const bookItem = document.createElement("div");
-            bookItem.textContent = book.title;
+            bookItem.className =
+              "d-flex justify-content-between align-items-center mb-2";
+            bookItem.innerHTML = `
+              <span>${book.title}</span>
+              <div>
+                <button class="btn btn-danger btn-sm" onclick="unpublishBook('${book._id.toString()}')">Unpublish</button>
+              </div>`;
+
             bookListContainer.appendChild(bookItem);
           });
         } else {
@@ -133,10 +165,8 @@ function displayMyBooks() {
         }
       })
       .catch((error) => {
-        console.log("error==>", JSON.stringify(error));
-
-        //   console.error('Error during login:', error);
-        //   alert(`${error}`);
+        console.error("error", error);
+        alert("Error while fetching user books");
       });
   } else {
     bookListContainer.innerHTML = "<p>Please log in to see your books.</p>";
@@ -160,20 +190,18 @@ function login() {
         localStorage.setItem("token", data.results[0].token);
         currentUser = username;
         showLandingPage();
-      } 
-      
+      }
+
       if (data?.errors?.length) {
         data?.errors?.forEach((err) => {
           alert(`${err.instancePath ?? ""}:${err.message}`);
         });
       }
-
-     
     })
-  .catch((error) => {
-    console.error('Error during login:', error);
-    alert("Error during login");
-  });
+    .catch((error) => {
+      console.error("Error during login:", error);
+      alert("Error during login");
+    });
 }
 
 function signup() {
@@ -234,3 +262,56 @@ function fetchMyBooks() {
       alert("Error fetching user books. Please try again.");
     });
 }
+
+function search() {
+
+  document.getElementById("search-Result").style.display = "block";
+  // document.getElementById("loginSignupPage").style.display = "none";
+
+  // document.getElementById("search-Result").style.display = "none";
+
+  const bookListContainer = document.getElementById("search-Result");
+  bookListContainer.innerHTML = "<h4>result</h4>";
+
+
+  const searchKey = document.getElementById("Search-box").value;
+  // alert(`${searchKey}`)
+
+  // if (searchKey) {
+    if (currentUser) {
+      fetch(`${BASE_URL}/api/books/search?title=${searchKey}`, {
+        method: "GET",
+        headers: { Authorization: token },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("books",data?.results);
+          if(data?.results?.length){
+  
+            data?.results?.forEach((book) => {
+              const bookItem = document.createElement("div");
+              bookItem.textContent = book.title;
+              bookListContainer.appendChild(bookItem);
+            });
+
+          }else{
+            bookListContainer.innerHTML = "<p>No books found!</p>";
+          }
+        })
+        .catch((error) => {
+          console.error("Error during search:", error);
+          alert("Error during search");
+        });
+    } else {
+      bookListContainer.innerHTML = "<p>Please log in to see your books.</p>";
+    }
+  // }else{
+  //   clearSearchResult()
+  // }
+}
+
+// function clearSearchResult(){
+
+//   document.getElementById("searchResult").style.display = "none";
+
+// }
