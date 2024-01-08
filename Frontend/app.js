@@ -7,8 +7,16 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function showLoginForm() {
-  document.getElementById("loginSignupPage").style.display = "block";
-  document.getElementById("landingPage").style.display = "none";
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
+
+  if (token && user) {
+    currentUser = user
+    showLandingPage();
+  } else {
+    document.getElementById("loginSignupPage").style.display = "block";
+    document.getElementById("landingPage").style.display = "none";
+  }
 }
 
 function showLandingPage() {
@@ -197,6 +205,7 @@ function login() {
     .then((data) => {
       if (data?.results?.[0]?.token) {
         localStorage.setItem("token", data.results[0].token);
+        localStorage.setItem("user",username);
         currentUser = username;
         showLandingPage();
       }
@@ -242,6 +251,7 @@ function signup() {
 
 function logout() {
   localStorage.removeItem("token");
+  localStorage.removeItem("user");
   currentUser = null;
   showLoginForm();
 }
