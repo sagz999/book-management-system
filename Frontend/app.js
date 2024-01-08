@@ -1,9 +1,5 @@
 const BASE_URL = "http://localhost:3000"; // Replace with your actual backend URL
 
-// Dummy book data (replace with actual fetch from the server)
-let books = [];
-
-// Dummy user data (replace with actual user authentication logic)
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -22,9 +18,36 @@ function showLandingPage() {
   displayBookList();
 }
 
+function unpublishBook(bookId) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Please log in to publish your books.");
+    return;
+  }
+
+  fetch(`${BASE_URL}/api/books/unpublish/${bookId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      displayMyBooks();
+    })
+    .catch((error) => {
+      console.error("error", error);
+      alert("Error while unpublishing book");
+    });
+}
+
 function displayBookList() {
+  document.getElementById("PublishError").textContent = "";
+  hidePublishForm();
+
   const bookListContainer = document.getElementById("bookList");
-  bookListContainer.innerHTML = "<h2>Book List</h2>";
+  bookListContainer.innerHTML = "<h2>All Books</h2>";
 
   if (currentUser) {
     const token = localStorage.getItem("token");
@@ -40,7 +63,9 @@ function displayBookList() {
         if (data?.results?.length) {
           data?.results?.forEach((book) => {
             const bookItem = document.createElement("div");
-            bookItem.textContent = book.title;
+            bookItem.className =
+              "d-flex justify-content-between align-items-center mb-2";
+            bookItem.innerHTML = `<span>${book.title}  by ${book.author}</span>`;
             bookListContainer.appendChild(bookItem);
           });
         } else {
@@ -67,6 +92,11 @@ function togglePublishForm() {
   }
 }
 
+function hidePublishForm() {
+  const publishForm = document.getElementById("publishBookForm");
+  publishForm.style.display = "none";
+}
+
 function publishBook() {
   const token = localStorage.getItem("token");
 
@@ -76,9 +106,10 @@ function publishBook() {
   }
 
   const bookTitle = document.getElementById("bookTitle").value;
-  if (bookTitle) {
-    // Dummy logic to add a new book to the list
-    const newBook = { title: bookTitle };
+  const author = document.getElementById("bookAuthor").value;
+  // Dummy logic to add a new book to the list
+  if (bookTitle && author) {
+    const newBook = { title: bookTitle, author };
 
     fetch(`${BASE_URL}/api/books/publish`, {
       method: "POST",
@@ -90,23 +121,26 @@ function publishBook() {
     })
       .then((response) => response.json())
       .then((data) => {
-        togglePublishForm();
+        document.getElementById("PublishError").textContent = "";
+
+        hidePublishForm();
+        displayBookList();
       })
       .catch((error) => {
         console.log("error==>", JSON.stringify(error));
         //   console.error('Error during signup:', error);
         //   alert(`${error}`);
       });
-
-    // books.push(newBook);
     displayBookList();
   } else {
-    alert("Please enter a title for the book.");
+    document.getElementById("PublishError").textContent =
+      "Title and author must constain atleast 1 character";
   }
 }
 
 function displayMyBooks() {
-  const myBooks = books.filter((book) => book.userId === currentUser);
+  hidePublishForm();
+
   const bookListContainer = document.getElementById("bookList");
   bookListContainer.innerHTML = "<h2>My Books</h2>";
 
@@ -124,7 +158,14 @@ function displayMyBooks() {
         if (data?.results?.length) {
           data?.results?.forEach((book) => {
             const bookItem = document.createElement("div");
-            bookItem.textContent = book.title;
+            bookItem.className =
+              "d-flex justify-content-between align-items-center mb-2";
+            bookItem.innerHTML = `
+              <span>${book.title}  by ${book.author}</span>
+              <div>
+                <button class="btn btn-danger btn-sm" onclick="unpublishBook('${book._id.toString()}')">Unpublish</button>
+              </div>`;
+
             bookListContainer.appendChild(bookItem);
           });
         } else {
@@ -154,26 +195,22 @@ function login() {
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log("response", JSON.stringify(data));
-
       if (data?.results?.[0]?.token) {
         localStorage.setItem("token", data.results[0].token);
         currentUser = username;
         showLandingPage();
-      } 
-      
+      }
+
       if (data?.errors?.length) {
         data?.errors?.forEach((err) => {
           alert(`${err.instancePath ?? ""}:${err.message}`);
         });
       }
-
-     
     })
-  .catch((error) => {
-    console.error('Error during login:', error);
-    alert("Error during login");
-  });
+    .catch((error) => {
+      console.error("Error during login:", error);
+      alert("Error during login");
+    });
 }
 
 function signup() {
@@ -198,9 +235,8 @@ function signup() {
       }
     })
     .catch((error) => {
-      console.log("error==>", JSON.stringify(error));
       //   console.error('Error during signup:', error);
-      //   alert(`${error}`);
+      alert("Invalid Credentials");
     });
 }
 
@@ -210,27 +246,43 @@ function logout() {
   showLoginForm();
 }
 
-function fetchMyBooks() {
+function searchBooks() {
+  hidePublishForm();
+
+  const searchKey = document.getElementById("search-box").value;
+  const bookListContainer = document.getElementById("bookList");
+  bookListContainer.innerHTML = "<h2>Search result</h2>";
   const token = localStorage.getItem("token");
 
-  if (!token) {
-    alert("Please log in to see your books.");
-    return;
-  }
-
-  fetch(`${BASE_URL}/api/books/user`, {
-    method: "GET",
-    headers: {
-      Authorization: token,
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      // Handle the fetched data (list of user's books) as needed
-      console.log("My Books:", data);
+  if (currentUser) {
+    fetch(`${BASE_URL}/api/books/search?title=${searchKey}`, {
+      method: "GET",
+      headers: { Authorization: token },
     })
-    .catch((error) => {
-      console.error("Error fetching user books:", error);
-      alert("Error fetching user books. Please try again.");
-    });
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        if (data?.results?.length) {
+          data?.results?.forEach((book) => {
+            const bookItem = document.createElement("div");
+            bookItem.className =
+              "d-flex justify-content-between align-items-center mb-2";
+            bookItem.innerHTML = `<span>${book.title}  by ${book.author}</span>`;
+            bookListContainer.appendChild(bookItem);
+          });
+        } else {
+          bookListContainer.innerHTML = "<p>No books found!</p>";
+        }
+      })
+      .catch((error) => {
+        bookListContainer.innerHTML = "<p>No books found!</p>";
+        console.error("Error during search:", error);
+        // alert("Error during search");
+      });
+  } else {
+    bookListContainer.innerHTML = "<p>Please log in to see your books.</p>";
+  }
+  // }else{
+  //   clearSearchResult()
+  // }
 }

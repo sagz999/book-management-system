@@ -27,7 +27,7 @@ auth.post("/signup", async (req, res, next) => {
 auth.post("/login", async (req, res, next) => {
   try {
 
-    if (!authDto(req.body)) throw new HttpError(400, authDto.errors)
+    // if (!authDto(req.body)) throw new HttpError(400, authDto.errors)
 
     const credentials = req.body
     const token = await logInUser(credentials)

@@ -19,5 +19,7 @@ export const updateBook =async (filters, update) => {
   mongoClient.updateOne("books", filters, update);
 };
 
+export const getBooksCount = filters => mongoClient.count('books', filters)
+
 export default {}
 

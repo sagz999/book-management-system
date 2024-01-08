@@ -8,9 +8,10 @@ const ajv = new Ajv({ allErrors: true, allowUnionTypes: true });
 const addBookSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["title"],
+  required: ["title","author"],
   properties: {
-    title: { type: "string", minLength: 1, maxLength: 50 }
+    title: { type: "string", minLength: 1, maxLength: 50 },
+    author: { type: "string", minLength: 1, maxLength: 50 }
   },
 };
 

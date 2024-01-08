@@ -4,17 +4,18 @@ import { addBook, getBook, getBooks, updateBook } from "../dbContext/books.js";
 import HttpError from "../utils/HttpError.js";
 
 export const publishBook = async (bookData) => {
-  const { title, user } = bookData;
+  const { title, user,author } = bookData;
 
-  const book = await getBook({ title, published: true });
+  const book = await getBook({ title,author, published: true });
   if (book)
     throw new HttpError(409, {
-      message: "Book with same title is already published",
+      message: "Book is already published",
     });
 
   const bookObj = {
     title,
-    user_id: user?.user_id,
+    author,
+    published_by: user?.user_id,
     published: true
   };
 
@@ -36,13 +37,13 @@ export const unpublishBook = async (params) => {
   const { bookId, user } = params;
 
   return updateBook(
-    { _id: new ObjectId(bookId), user_id: user?.user_id },
+    { _id: new ObjectId(bookId), published_by: user?.user_id },
     { $set: { published: false } }
   );
 };
 
 export const getUserPublishedBooks = async (user) => {
-  return getBooks({ user_id: user?.user_id, published: true });
+  return getBooks({ published_by: user?.user_id, published: true });
 };
 
 export default {};

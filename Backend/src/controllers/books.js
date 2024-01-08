@@ -10,7 +10,7 @@ import {
   unpublishBook,
 } from "../libs/books.js";
 import { publishBookDto } from "../dto/books.js";
-import { getBooks } from "../dbContext/books.js";
+import { getBooks, getBooksCount } from "../dbContext/books.js";
 
 const books = Router();
 
@@ -21,6 +21,7 @@ books.post("/publish", async (req, res, next) => {
 
     const bookData = {
       title: req.body.title,
+      author:req.body.author,
       user: req.user,
     };
 
@@ -43,7 +44,7 @@ books.get("/search", async (req, res, next) => {
 
     const books = await searchBooks(params);
 
-    const response = new HttpRes(201, books);
+    const response = new HttpRes(200, books);
     return res.status(response.status).send(response);
   } catch (err) {
     return next(err);
@@ -107,6 +108,18 @@ books.get("/published", async (req, res, next) => {
       pagination
     );
     const response = new HttpRes(200, books);
+    return res.status(response.status).send(response);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+books.get("/published/counts", async (req, res, next) => {
+  try {
+    const counts = await getBooksCount(
+      { published: true }
+    );
+    const response = new HttpRes(200, counts);
     return res.status(response.status).send(response);
   } catch (err) {
     return next(err);
